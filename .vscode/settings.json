@@ -1,0 +1,16 @@
+{
+    "scm.repositories.sortOrder": "path",
+    "git.detectSubmodules": false,
+    "git.ignoreSubmodules": true,
+    "files.associations": {
+        "wchar.h": "c",
+        "unistd.h": "c",
+        "wctype.h": "c",
+        "gpio.h": "c",
+        "config.h": "c",
+        "irq.h": "c",
+        "stdlib.h": "c",
+        "stdio_usb.h": "c",
+        "stdio.h": "c"
+    }
+}
