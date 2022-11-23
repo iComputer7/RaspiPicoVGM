@@ -1,4 +1,4 @@
-# Pico OPL3 Player
+# Pico VGM Player
 
 Hardware VGM player with a Raspberry Pi Pico and a Yamaha YMF262 (OPL3), with some experimental support for dual Philips SAA1099.
 
@@ -11,11 +11,14 @@ As of right now, it only supports playing uncompressed VGM files that are on the
 
 ***TODO: put a nice table somewhere that has what's hooked up to where and anything else that's needed. For right now you can check config.h to see what each GPIO does.***
 
-Various circuits and code snippets are adapted from Throwback Operator by @AidanHockey5 and Snark Barker/Sound Blaster 1.0 by @schlae and Creative Labs.
+Various circuits and code snippets are adapted from:
+
+* (OPL3 subsystem) [Throwback Operator by @AidanHockey5](https://github.com/AidanHockey5/Throwback_Operator)
+* (SAA1099 subsystem) [Snark Barker and Sound Blaster 1.0 by @schlae and Creative Labs](https://github.com/schlae/snark-barker)
 
 ---
 
-## Todo List
+## Todo List (not in any specific order)
 
 * Make a complete schematic
 * Get something that resembles a user interface
@@ -24,10 +27,11 @@ Various circuits and code snippets are adapted from Throwback Operator by @Aidan
 * Refuse to play files that call for unsupported chips
 * Switch to C++ and move stuff into classes to make code more readable and clean
 * (Future) VGZ support
-* (Future) Implement RetroWave OPL3 compatibility support
+* (Future) RetroWave OPL3 support
 * (Future) Allow users to pick and choose which chips they have without needing to recompile the firmware
 * (Future) YM2612 support
 * (Future) Dual SN76489 support
+* (Future) OPLL playback by translating OPLL data to OPL3 data (or through a real OPLL if translation is not possible)
 * (Future) Pico W support with some way to remotely control playback and manage files on the SD card
 * (Future) An actual PCB that integrates the RP2040 directly onto it for skilled solderers who want to save space and have a better voltage regulator
 
