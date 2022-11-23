@@ -7,53 +7,23 @@
 #include "hardware/timer.h"
 #include "hardware/irq.h"
 #include "config.h"
-//#include "hardware/pio.h"
-//#include "song_tick.pio.h"
 #include "pico/multicore.h"
 #include "ff.h"
 
 //Macros + Typedefs
-//#define DATABUS_OUT() gpio_set_dir_out_masked(MASK_DATABUS)
 #define BIT(x) (1 << x)
 #define HEADER_U32(x) *(uint32_t*)(&header_data[x])
 typedef uint8_t byte;
+
+#include "databus.hpp"
+#include "opl3.hpp"
 
 /*----------------------*/
 
 #pragma region Communication Stuff
 
-static inline void SetDataBus(byte value) {
-    #ifdef CONFIG_DATABUS_REVERSED
-    #error "databus reversed config is set, not implemented yet"
-    #else
-    gpio_put(PIN_D0, value & BIT(0));
-    gpio_put(PIN_D1, value & BIT(1));
-    gpio_put(PIN_D2, value & BIT(2));
-    gpio_put(PIN_D3, value & BIT(3));
-    gpio_put(PIN_D4, value & BIT(4));
-    gpio_put(PIN_D5, value & BIT(5));
-    gpio_put(PIN_D6, value & BIT(6));
-    gpio_put(PIN_D7, value & BIT(7));
-    #endif
-}
-
-static inline void SetFMAddress(byte addr) {
-    gpio_put(PIN_FM_A0, addr & BIT(0));
-    gpio_put(PIN_FM_A1, addr & BIT(1));
-}
-
-void SendFMByte(byte addr, byte data) {
-    SetFMAddress(addr);
-    gpio_put(PIN_FM_CS, GPIO_OFF);
-    SetDataBus(data);
-    busy_wait_us_32(FM_DATA_VALID_DELAY_US);
-    gpio_put(PIN_FM_WR, GPIO_OFF);
-    busy_wait_us_32(FM_WRITE_PULSE_US);
-
-    //all done
-    gpio_put(PIN_FM_CS, GPIO_ON);
-    gpio_put(PIN_FM_WR, GPIO_ON);
-}
+DataBus bus;
+Opl3Chip opl3;
 
 //chip: false = 1st chip, true = 2nd chip; addr: false = 0, true = 1
 static inline void SendSAAByte(bool chip, bool addr, byte data) {
@@ -68,7 +38,7 @@ static inline void SendSAAByte(bool chip, bool addr, byte data) {
     }
 
     gpio_put(PIN_SAA_A0, addr);
-    SetDataBus(data);
+    bus.set(data);
     busy_wait_us_32(SAA_DATA_VALID_DELAY_US);
     gpio_put(PIN_SAA_WR, GPIO_OFF);
     busy_wait_us_32(SAA_WRITE_PULSE_US);
@@ -248,11 +218,11 @@ static void SongTick(uint gpio, uint32_t event_mask) {
             byte data = ReadByte();
 
             //send register
-            SendFMByte(0, regi);
+            opl3.write(0, regi);
             busy_wait_us_32(FM_WRITE_PULSE_US);
             
             //send data
-            SendFMByte(1, data);
+            opl3.write(1, data);
             busy_wait_us_32(FM_WRITE_PULSE_US);
 
             break;
@@ -263,11 +233,11 @@ static void SongTick(uint gpio, uint32_t event_mask) {
             byte data = ReadByte();
 
             //send register
-            SendFMByte(0b10, regi);
+            opl3.write(0b10, regi);
             busy_wait_us_32(FM_WRITE_PULSE_US);
             
             //send data
-            SendFMByte(0b11, data);
+            opl3.write(0b11, data);
             busy_wait_us_32(FM_WRITE_PULSE_US);
 
             break;
@@ -408,8 +378,8 @@ int main() {
     gpio_put(PIN_SAA_CS2, GPIO_ON);
     gpio_put(PIN_SAA_WR, GPIO_ON);
     gpio_put(PIN_SAA_A0, GPIO_OFF);
-    SetDataBus(0);
-    SetFMAddress(0);
+    bus.set(0);
+    opl3.setAddr(0);
 
     //init clocks
     //changing system clock for better accuracy

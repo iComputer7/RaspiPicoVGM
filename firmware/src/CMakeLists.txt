@@ -14,7 +14,7 @@ pico_sdk_init()
 add_subdirectory(../no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI build)
 
 add_executable(pico_opl3_player
-  main.c
+  main.cpp
 )
 
 target_include_directories(pico_opl3_player PUBLIC
