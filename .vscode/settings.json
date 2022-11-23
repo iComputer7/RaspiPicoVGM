@@ -12,5 +12,6 @@
         "stdlib.h": "c",
         "stdio_usb.h": "c",
         "stdio.h": "c"
-    }
+    },
+    "cmake.sourceDirectory": "${workspaceFolder}/firmware"
 }
