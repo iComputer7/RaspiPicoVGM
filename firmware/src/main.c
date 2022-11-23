@@ -514,7 +514,12 @@ int main() {
     uint32_t fileVersion = HEADER_U32(0x08); //this is a BCD number
     music_length = HEADER_U32(0x4) + 4; //this is a relative offset instead of an absolute one because fuck you
     loopOffset = HEADER_U32(0x1c) + 0x1c; //ditto
-    uint32_t saaClk = HEADER_U32(0xc8);
+    
+    //saa1099 is only supported on 1.71 and newer
+    uint32_t saaClk = 0;
+    if (fileVersion >= 0x0171) {
+        uint32_t saaClk = HEADER_U32(0xc8);
+    }
 
     //determining file start
     if (fileVersion < 0x0150) {
@@ -584,6 +589,8 @@ int main() {
     //do song tick things on core 1
     multicore_launch_core1(core1_thing);
 
+    //now core 0 is free to run a user interface
+    //TODO
     for (;;) {
         //main loop
         tight_loop_contents();
