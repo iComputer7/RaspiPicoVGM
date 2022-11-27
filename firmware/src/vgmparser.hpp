@@ -51,14 +51,22 @@ class VgmParser {
             uint bytesRead = file->readIntoBuffer(header_data, 0xff);
             printf("Read %X (%u) bytes.\n", bytesRead, bytesRead);
 
+            music_length = HEADER_U32(0x4) + 4; //this is a relative offset instead of an absolute one because fuck you
+            loopOffset = HEADER_U32(0x1c) + 0x1c; //ditto
+            
+            //determining file start
+            if (getVersion() < 0x0150) {
+                startOffset = 0x40;
+            } else {
+                startOffset = HEADER_U32(0x34) + 0x34;
+            }
             /*//parsing some info
             uint32_t sampleCount = HEADER_U32(0x18);
             float songSeconds = (1.0F / 44100.0F) * sampleCount;
             uint32_t opl3Clk = HEADER_U32(0x5C);
             uint32_t opl2Clk = HEADER_U32(0x50);
             uint32_t fileVersion = HEADER_U32(0x08); //this is a BCD number
-            music_length = HEADER_U32(0x4) + 4; //this is a relative offset instead of an absolute one because fuck you
-            loopOffset = HEADER_U32(0x1c) + 0x1c; //ditto
+            
             
             //saa1099 is only supported on 1.71 and newer
             uint32_t saaClk = 0;
@@ -66,12 +74,7 @@ class VgmParser {
                 uint32_t saaClk = HEADER_U32(0xc8);
             }
 
-            //determining file start
-            if (fileVersion < 0x0150) {
-                startOffset = 0x40;
-            } else {
-                startOffset = HEADER_U32(0x34) + 0x34;
-            }*/
+            */
         }
 
         //VGM file's version, as a BCD coded number
@@ -103,16 +106,12 @@ class VgmParser {
 
         //File offset where song actually starts
         uint32_t getStartOffset() {
-            if (getVersion() < 0x0150) { //VGM 1.50 and before always start at the same place
-                return 0x40;
-            } else {
-                return HEADER_U32(0x34) + 0x34;
-            }
+            return startOffset;
         }
 
         //File offset where song loops back to
         uint32_t getLoopOffset() {
-            return HEADER_U32(0x1c) + 0x1c;
+            return loopOffset;
         }
 
         //Check if chip is present
