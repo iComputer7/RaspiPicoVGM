@@ -18,6 +18,7 @@ typedef uint8_t byte;
 #include "databus.hpp"
 #include "opl3.hpp"
 #include "saa1099.hpp"
+#include "filehandler.hpp"
 
 /*----------------------*/
 
@@ -26,94 +27,9 @@ typedef uint8_t byte;
 DataBus bus;
 Opl3Chip opl3(&bus);
 Saa1099Chip saa1099(&bus);
+FileHandler file("song.vgm");
 
 #pragma endregion
-
-FRESULT fr;
-FATFS fs;
-FIL vgmFile;
-char filename[] = "song.vgm";
-
-static inline byte ReadByte() {
-    uint bytesRead = 0;
-    byte buf = 0;
-    FRESULT r = f_read(&vgmFile, &buf, 1, &bytesRead);
-
-    if (r != FR_OK || bytesRead != 1) {
-        printf("Failed to read a single byte from the file. Hanging.\n");
-        for (;;) {
-            tight_loop_contents();
-        }
-    }
-
-    return buf;
-}
-
-static inline uint16_t ReadU16() {
-    uint bytesRead = 0;
-    uint16_t buf = 0;
-    FRESULT r = f_read(&vgmFile, &buf, 2, &bytesRead);
-
-    if (r != FR_OK || bytesRead != 2) {
-        printf("Failed to read two bytes from the file. Hanging.\n");
-        for (;;) {
-            tight_loop_contents();
-        }
-    }
-
-    return buf;
-}
-
-static inline uint32_t ReadU32() {
-    uint bytesRead = 0;
-    uint32_t buf = 0;
-    FRESULT r = f_read(&vgmFile, &buf, 4, &bytesRead);
-
-    if (r != FR_OK || bytesRead != 4) {
-        printf("Failed to read four bytes from the file. Hanging.\n");
-        for (;;) {
-            tight_loop_contents();
-        }
-    }
-
-    return buf;
-}
-
-static inline uint32_t ReadIntoBuffer(void* buf, uint32_t bytesToRead) {
-    uint bytesRead = 0;
-    FRESULT r = f_read(&vgmFile, buf, bytesToRead, &bytesRead);
-
-    if (r != FR_OK) {
-        printf("Failed to read %u bytes from the file. Hanging.\n", bytesToRead);
-        for (;;) {
-            tight_loop_contents();
-        }
-    }
-
-    return bytesRead;
-}
-
-static inline void SkipBytes(int bytesToSkip) {
-    FRESULT r = f_lseek(&vgmFile, f_tell(&vgmFile) + bytesToSkip);
-
-    if (r != FR_OK) {
-        printf("Failed to skip %u bytes in the file. Hanging.\n", bytesToSkip);
-        for (;;) {
-            tight_loop_contents();
-        }
-    }
-}
-
-static inline void SeekFile(uint32_t fOffset) {
-    FRESULT r = f_lseek(&vgmFile, fOffset);
-
-    if (r != FR_OK) {
-        printf("Failed to seek to offset 0x%X (%u) in the file. Hanging.\n", fOffset, fOffset);
-        for (;;) {
-            tight_loop_contents();
-        }
-    }
-}
 
 uint16_t delayCycles = 0;
 uint32_t startOffset = 0;
@@ -130,24 +46,21 @@ static void SongTick(uint gpio, uint32_t event_mask) {
     //parse a byte out of the VGM file
     //Parse VGM commands
     //Full command listing and VGM file spec: https://vgmrips.net/wiki/VGM_Specification
-    byte curByte = ReadByte();
+    byte curByte = file.ReadByte();
     switch (curByte) {
         case 0x4F: { //Game Gear PSG stereo register write
-            SkipBytes(1);
+            file.SkipBytes(1);
             break;
         }
 
         //TODO: SN76489 stuff because of the tandy 3 voice sound
         case 0x50: { //SN76489/SN76496 write
-            SkipBytes(1);
+            file.SkipBytes(1);
             break;
         }
 
         case 0x61: { //Wait x cycles
-            //reading cycle count
-            //VGM format is little endian and so is ARM
-            delayCycles = ReadU16();
-            
+            delayCycles = file.ReadU16();
             break;
         }
 
@@ -183,8 +96,8 @@ static void SongTick(uint gpio, uint32_t event_mask) {
         }
 
         case 0x66: { //Loop
-            printf("%X: Got command 0x66. Looping back to offset 0x%X.\n", f_tell(&vgmFile), loopOffset);
-            SeekFile(loopOffset);
+            printf("%X: Got command 0x66. Looping back to offset 0x%X.\n", file.getPos(), loopOffset);
+            file.SeekFile(loopOffset);
             break;
         }
 
@@ -192,8 +105,8 @@ static void SongTick(uint gpio, uint32_t event_mask) {
         case 0x5A: //YM3812 (OPL2)
         case 0x5B: //YM3526 (OPL1)
         case 0x5E: { //YMF262 port 0
-            byte regi = ReadByte();
-            byte data = ReadByte();
+            byte regi = file.ReadByte();
+            byte data = file.ReadByte();
 
             //send register
             opl3.write(0, regi);
@@ -207,8 +120,8 @@ static void SongTick(uint gpio, uint32_t event_mask) {
         }
 
         case 0x5F: { //YMF262 port 1
-            byte regi = ReadByte();
-            byte data = ReadByte();
+            byte regi = file.ReadByte();
+            byte data = file.ReadByte();
 
             //send register
             opl3.write(0b10, regi);
@@ -223,8 +136,8 @@ static void SongTick(uint gpio, uint32_t event_mask) {
 
         //SAA1099 stuff
         case 0xBD: { //SAA1099 write
-            byte regi = ReadByte();
-            byte data = ReadByte();
+            byte regi = file.ReadByte();
+            byte data = file.ReadByte();
             bool chip = false;
 
             //figuring out which chip to write to
@@ -259,8 +172,7 @@ static void SongTick(uint gpio, uint32_t event_mask) {
         case 0x5D: //YMZ280B
         case 0x52: //YM2612 port 0
         case 0x53: { //YM2612 port 1
-            SkipBytes(1);
-            //TODO: log to debug console?
+            file.SkipBytes(1);
             break;
         }
 
@@ -269,10 +181,7 @@ static void SongTick(uint gpio, uint32_t event_mask) {
             break;
         }
         case 0xE0: { //seek to offset in PCM data bank
-            //uint32_t seekTo = ReadU32();
-            //pcmOffset = seekTo;
-            SkipBytes(3);
-
+            file.SkipBytes(3);
             break;
         }
 
@@ -309,20 +218,20 @@ static void SongTick(uint gpio, uint32_t event_mask) {
 
         //not necessary anymore, only was needed when the code was buggier and shittier
         /*case 0xFF: {
-            printf("%X: Encountered 0xFF. Something has gone very wrong! Hanging.\n", f_tell(&vgmFile));
+            printf("%X: Encountered 0xFF. Something has gone very wrong! Hanging.\n", file.getPos());
             for (;;) {
                 tight_loop_contents();
             }
         }*/
 
         default: {
-            printf("%X: Encountered unknown command %X. Ignoring.\n", f_tell(&vgmFile), curByte);
+            printf("%X: Encountered unknown command %X. Ignoring.\n", file.getPos(), curByte);
             break;
         }
     }
 
-    if (f_tell(&vgmFile) == music_length) {
-        f_lseek(&vgmFile, startOffset);
+    if (file.getPos() == music_length) {
+        file.SeekFile(startOffset);
         printf("Reached end of song. Looping.\n");
     }
 }
@@ -390,47 +299,13 @@ int main() {
     printf("\n------------------------\n");
     printf("Host serial connected.\n");
     printf("Mounting SD card...\n");
-
-    //Initialize SD card
-    if (!sd_init_driver()) {
-        printf("ERROR: Could not initialize SD card\n");
-        for (;;) {
-            tight_loop_contents();
-        }
-    } else {
-        printf("Success!\n");
-    }
-
-    //Mount drive
-    fr = f_mount(&fs, "0:", 1);
-    if (fr != FR_OK) {
-        printf("ERROR: Could not mount filesystem (%d)\n", fr);
-        for (;;) {
-            tight_loop_contents();
-        }
-    }
-
-    //Open file for reading
-    fr = f_open(&vgmFile, filename, FA_READ);
-    if (fr != FR_OK) {
-        printf("ERROR: Could not open file (%d)\n", fr);
-        for (;;) {
-            tight_loop_contents();
-        }
-    }
+    file.init();
 
     //reading header into RAM buffer
     printf("Reading 0xFF bytes from file and parsing header.\n");
     byte header_data[0xff];
-    uint bytesRead = 0;
-    f_rewind(&vgmFile);
-    fr = f_read(&vgmFile, header_data, 0xff, &bytesRead);
-    if (fr != FR_OK) {
-        printf("Error reading header from VGM file on SD card. Hanging.\n");
-        for (;;) {
-            tight_loop_contents();
-        }
-    }
+    file.rewind();
+    uint bytesRead = file.ReadIntoBuffer(header_data, 0xff);
     printf("Read %X (%u) bytes.\n", bytesRead, bytesRead);
 
     //parsing some info
@@ -500,7 +375,7 @@ int main() {
     printf("Loop offset is at 0x%x.\n", loopOffset);
 
     //seeking to beginning offset
-    f_lseek(&vgmFile, startOffset);
+    file.SeekFile(startOffset);
 
     //do song tick things on core 1
     multicore_launch_core1(core1_thing);
