@@ -17,6 +17,7 @@ typedef uint8_t byte;
 
 #include "databus.hpp"
 #include "opl3.hpp"
+#include "saa1099.hpp"
 
 /*----------------------*/
 
@@ -24,30 +25,7 @@ typedef uint8_t byte;
 
 DataBus bus;
 Opl3Chip opl3(&bus);
-
-//chip: false = 1st chip, true = 2nd chip; addr: false = 0, true = 1
-static inline void SendSAAByte(bool chip, bool addr, byte data) {
-    if (chip) {
-        //true = 2nd chip
-        gpio_put(PIN_SAA_CS1, GPIO_ON);
-        gpio_put(PIN_SAA_CS2, GPIO_OFF); //these are active low btw
-    } else {
-        //false = 1st chip
-        gpio_put(PIN_SAA_CS2, GPIO_ON);
-        gpio_put(PIN_SAA_CS1, GPIO_OFF); 
-    }
-
-    gpio_put(PIN_SAA_A0, addr);
-    bus.set(data);
-    busy_wait_us_32(SAA_DATA_VALID_DELAY_US);
-    gpio_put(PIN_SAA_WR, GPIO_OFF);
-    busy_wait_us_32(SAA_WRITE_PULSE_US);
-
-    //done
-    gpio_put(PIN_SAA_WR, GPIO_ON);
-    gpio_put(PIN_SAA_CS1, GPIO_ON);
-    gpio_put(PIN_SAA_CS2, GPIO_ON);
-}
+Saa1099Chip saa1099(&bus);
 
 #pragma endregion
 
@@ -258,11 +236,11 @@ static void SongTick(uint gpio, uint32_t event_mask) {
             }
 
             //send register
-            SendSAAByte(chip, true, regi);
+            saa1099.write(chip, true, regi);
             busy_wait_us_32(SAA_WRITE_PULSE_US);
             
             //send data
-            SendSAAByte(chip, false, data);
+            saa1099.write(chip, false, data);
             busy_wait_us_32(SAA_WRITE_PULSE_US);
 
             break;
@@ -392,15 +370,7 @@ int main() {
 
     //TODO: accomodate for other system clock speeds if other boards have issues
     opl3.clockInit();
-
-    //SAA1099 clock
-    //Sound Blaster 1.0 clocks them at 7.159 MHz
-    //At 142.8 MHz sys clock this outputs 7.1849 MHz according to my oscilloscope, which is 0.14% higher
-    uint slice_num_saa = pwm_gpio_to_slice_num(PIN_SAA_CLK);
-    pwm_set_wrap(slice_num_saa, 1); //divide by 2 prescaler, at 142.8 MHz this is 71.4 MHz
-    pwm_set_chan_level(slice_num_saa, PWM_CHAN_A, 1);
-    pwm_set_clkdiv(slice_num_saa, 9.9734F); //freq = (prescaled_sys_clk / 2) / divider
-    pwm_set_enabled(slice_num_saa, true);
+    saa1099.clockInit();
 
     //tick
     uint slice_num_tick = pwm_gpio_to_slice_num(1);
@@ -409,18 +379,11 @@ int main() {
     pwm_set_clkdiv(slice_num_tick, 6.3244F); //freq = (prescaled_sys_clk / 2) / divider
     pwm_set_enabled(slice_num_tick, true);
 
-    //YMF262 init
+    //chip init
     opl3.chipInit();
+    saa1099.chipInit();
 
-    //SAA1099 init - first chip
-    SendSAAByte(false, 1, 0x1c); //A0 high selects a register, register 1C is frequency reset + sound enable
-    SendSAAByte(false, 0, 0b11); //A0 low writes to the register, this resets the frequency for all channels and enables sound output
-
-    //SAA1099 init - second chip
-    SendSAAByte(true, 1, 0x1c);
-    SendSAAByte(true, 0, 0b11);
-
-    //waiting for host USB serial??
+    //waiting for host USB serial
     while (!stdio_usb_connected()) {
         tight_loop_contents();
     }
@@ -492,18 +455,6 @@ int main() {
     } else {
         startOffset = HEADER_U32(0x34) + 0x34;
     }
-
-    /*//checking for T6W28 and/or dual chips - SN76489
-    if ((psgClk & BIT(30)) || (psgClk & BIT(31))) {
-        printf("FATAL: Song expects dual SN76489! This is not supported!\n");
-        printf("Hanging.\n");
-        for (;;) {
-            tight_loop_contents();
-        }
-    } else {
-        //clearing the bits to not confuse any following code
-        psgClk &= ~(BIT(30) | BIT(31));
-    }*/
 
     //checking for dual chips - OPL3
     if (opl3Clk & BIT(30)) {
