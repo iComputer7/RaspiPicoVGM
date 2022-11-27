@@ -23,7 +23,7 @@ typedef uint8_t byte;
 #pragma region Communication Stuff
 
 DataBus bus;
-Opl3Chip opl3;
+Opl3Chip opl3(&bus);
 
 //chip: false = 1st chip, true = 2nd chip; addr: false = 0, true = 1
 static inline void SendSAAByte(bool chip, bool addr, byte data) {
@@ -390,10 +390,8 @@ int main() {
         printf("Current sys clock is %f MHz.", curSysClk / 1000000.0F);
     }
 
-    //Outputs system clock divided by 10 to GPIO21
-    //YMF262 should be 14,318,180 Hz (NTSC colorburst freq. x4)
-    //At 142.8 MHz sys clock it should output 14.28 MHz, which is 0.2% higher
-    clock_gpio_init(PIN_FM_CLK, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_CLK_SYS, 10);
+    //TODO: accomodate for other system clock speeds if other boards have issues
+    opl3.clockInit();
 
     //SAA1099 clock
     //Sound Blaster 1.0 clocks them at 7.159 MHz
@@ -412,10 +410,7 @@ int main() {
     pwm_set_enabled(slice_num_tick, true);
 
     //YMF262 init
-    gpio_put(PIN_FM_IC, GPIO_OFF);
-    busy_wait_ms(10); //TODO: the datasheet says the reset pulse should be 400 clock cycles
-    gpio_put(PIN_FM_IC, GPIO_ON);
-    busy_wait_us_32(FM_WRITE_PULSE_US);
+    opl3.chipInit();
 
     //SAA1099 init - first chip
     SendSAAByte(false, 1, 0x1c); //A0 high selects a register, register 1C is frequency reset + sound enable
