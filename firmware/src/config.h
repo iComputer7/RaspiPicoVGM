@@ -1,7 +1,6 @@
 //#section Config
 
-//Set this if the data bus pins are wired backwards
-//#define CONFIG_DATABUS_REVERSED
+//#define CONFIG_DATABUS_REVERSED //Set this if the data bus pins are wired backwards
 
 //#sectionend
 
