@@ -43,7 +43,6 @@ static void SongTick(uint gpio, uint32_t event_mask) {
         return;
     }
 
-    //parse a byte out of the VGM file
     //Parse VGM commands
     //Full command listing and VGM file spec: https://vgmrips.net/wiki/VGM_Specification
     byte curByte = file.ReadByte();
@@ -138,15 +137,10 @@ static void SongTick(uint gpio, uint32_t event_mask) {
         case 0xBD: { //SAA1099 write
             byte regi = file.ReadByte();
             byte data = file.ReadByte();
-            bool chip = false;
 
             //figuring out which chip to write to
             //bit 7: low = chip 1, high = chip 2
-            if (regi & BIT(7)) {
-                chip = true;
-            } else {
-                chip = false;
-            }
+            bool chip = (regi & BIT(7)) != 0;
 
             //send register
             saa1099.write(chip, true, regi);
@@ -178,6 +172,7 @@ static void SongTick(uint gpio, uint32_t event_mask) {
 
         //PCM stuff
         case 0x67: { //data block
+            //TODO: skip these
             break;
         }
         case 0xE0: { //seek to offset in PCM data bank
@@ -202,27 +197,8 @@ static void SongTick(uint gpio, uint32_t event_mask) {
         case 0x8D:
         case 0x8E:
         case 0x8F: {
-            //send register
-            /*SendFMByte(0, 0x2A);
-            busy_wait_us_32(FM_WRITE_PULSE_US);
-            
-            //send data
-            //SendFMByte(1, pcm_buffer[pcmOffset]);
-            SendFMByte(1, PCM_RAM_Read(pcmOffset));
-            busy_wait_us_32(FM_WRITE_PULSE_US);
-
-            pcmOffset++;
-            delayCycles = curByte & 0xf;*/
             break;
         }
-
-        //not necessary anymore, only was needed when the code was buggier and shittier
-        /*case 0xFF: {
-            printf("%X: Encountered 0xFF. Something has gone very wrong! Hanging.\n", file.getPos());
-            for (;;) {
-                tight_loop_contents();
-            }
-        }*/
 
         default: {
             printf("%X: Encountered unknown command %X. Ignoring.\n", file.getPos(), curByte);
