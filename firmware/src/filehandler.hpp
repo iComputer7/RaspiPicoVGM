@@ -1,5 +1,6 @@
 #include "config.h"
 
+#pragma once
 class FileHandler {
     private:
         FRESULT fr;
