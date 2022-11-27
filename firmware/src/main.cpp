@@ -45,21 +45,21 @@ static void SongTick(uint gpio, uint32_t event_mask) {
 
     //Parse VGM commands
     //Full command listing and VGM file spec: https://vgmrips.net/wiki/VGM_Specification
-    byte curByte = file.ReadByte();
+    byte curByte = file.readByte();
     switch (curByte) {
         case 0x4F: { //Game Gear PSG stereo register write
-            file.SkipBytes(1);
+            file.skip(1);
             break;
         }
 
         //TODO: SN76489 stuff because of the tandy 3 voice sound
         case 0x50: { //SN76489/SN76496 write
-            file.SkipBytes(1);
+            file.skip(1);
             break;
         }
 
         case 0x61: { //Wait x cycles
-            delayCycles = file.ReadU16();
+            delayCycles = file.readU16();
             break;
         }
 
@@ -96,7 +96,7 @@ static void SongTick(uint gpio, uint32_t event_mask) {
 
         case 0x66: { //Loop
             printf("%X: Got command 0x66. Looping back to offset 0x%X.\n", file.getPos(), loopOffset);
-            file.SeekFile(loopOffset);
+            file.seek(loopOffset);
             break;
         }
 
@@ -104,8 +104,8 @@ static void SongTick(uint gpio, uint32_t event_mask) {
         case 0x5A: //YM3812 (OPL2)
         case 0x5B: //YM3526 (OPL1)
         case 0x5E: { //YMF262 port 0
-            byte regi = file.ReadByte();
-            byte data = file.ReadByte();
+            byte regi = file.readByte();
+            byte data = file.readByte();
 
             //send register
             opl3.write(0, regi);
@@ -119,8 +119,8 @@ static void SongTick(uint gpio, uint32_t event_mask) {
         }
 
         case 0x5F: { //YMF262 port 1
-            byte regi = file.ReadByte();
-            byte data = file.ReadByte();
+            byte regi = file.readByte();
+            byte data = file.readByte();
 
             //send register
             opl3.write(0b10, regi);
@@ -135,8 +135,8 @@ static void SongTick(uint gpio, uint32_t event_mask) {
 
         //SAA1099 stuff
         case 0xBD: { //SAA1099 write
-            byte regi = file.ReadByte();
-            byte data = file.ReadByte();
+            byte regi = file.readByte();
+            byte data = file.readByte();
 
             //figuring out which chip to write to
             //bit 7: low = chip 1, high = chip 2
@@ -166,7 +166,7 @@ static void SongTick(uint gpio, uint32_t event_mask) {
         case 0x5D: //YMZ280B
         case 0x52: //YM2612 port 0
         case 0x53: { //YM2612 port 1
-            file.SkipBytes(1);
+            file.skip(1);
             break;
         }
 
@@ -176,7 +176,7 @@ static void SongTick(uint gpio, uint32_t event_mask) {
             break;
         }
         case 0xE0: { //seek to offset in PCM data bank
-            file.SkipBytes(3);
+            file.skip(3);
             break;
         }
 
@@ -207,7 +207,7 @@ static void SongTick(uint gpio, uint32_t event_mask) {
     }
 
     if (file.getPos() == music_length) {
-        file.SeekFile(startOffset);
+        file.seek(startOffset);
         printf("Reached end of song. Looping.\n");
     }
 }
@@ -281,7 +281,7 @@ int main() {
     printf("Reading 0xFF bytes from file and parsing header.\n");
     byte header_data[0xff];
     file.rewind();
-    uint bytesRead = file.ReadIntoBuffer(header_data, 0xff);
+    uint bytesRead = file.readIntoBuffer(header_data, 0xff);
     printf("Read %X (%u) bytes.\n", bytesRead, bytesRead);
 
     //parsing some info
@@ -351,7 +351,7 @@ int main() {
     printf("Loop offset is at 0x%x.\n", loopOffset);
 
     //seeking to beginning offset
-    file.SeekFile(startOffset);
+    file.seek(startOffset);
 
     //do song tick things on core 1
     multicore_launch_core1(core1_thing);

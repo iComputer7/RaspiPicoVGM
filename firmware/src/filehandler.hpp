@@ -16,7 +16,7 @@ class FileHandler {
             //TODO: close file, unmount SD card
         }
 
-        byte ReadByte() {
+        byte readByte() {
             uint bytesRead = 0;
             byte buf = 0;
             FRESULT r = f_read(&vgmFile, &buf, 1, &bytesRead);
@@ -31,7 +31,7 @@ class FileHandler {
             return buf;
         }
 
-        uint16_t ReadU16() {
+        uint16_t readU16() {
             uint bytesRead = 0;
             uint16_t buf = 0;
             FRESULT r = f_read(&vgmFile, &buf, 2, &bytesRead);
@@ -46,7 +46,7 @@ class FileHandler {
             return buf;
         }
 
-        uint32_t ReadU32() {
+        uint32_t readU32() {
             uint bytesRead = 0;
             uint32_t buf = 0;
             FRESULT r = f_read(&vgmFile, &buf, 4, &bytesRead);
@@ -61,7 +61,7 @@ class FileHandler {
             return buf;
         }
 
-        uint32_t ReadIntoBuffer(void* buf, uint32_t bytesToRead) {
+        uint32_t readIntoBuffer(void* buf, uint32_t bytesToRead) {
             uint bytesRead = 0;
             FRESULT r = f_read(&vgmFile, buf, bytesToRead, &bytesRead);
 
@@ -75,7 +75,7 @@ class FileHandler {
             return bytesRead;
         }
 
-        void SkipBytes(int bytesToSkip) {
+        void skip(int bytesToSkip) {
             FRESULT r = f_lseek(&vgmFile, f_tell(&vgmFile) + bytesToSkip);
 
             if (r != FR_OK) {
@@ -86,7 +86,7 @@ class FileHandler {
             }
         }
 
-        void SeekFile(uint32_t fOffset) {
+        void seek(uint32_t fOffset) {
             FRESULT r = f_lseek(&vgmFile, fOffset);
 
             if (r != FR_OK) {
