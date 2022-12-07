@@ -76,6 +76,14 @@ class VgmParser {
         //Dual chip bit from file header
         bool isDual(VgmHeaderChip chip) {
             DualChipClk* headerClk = getHeaderClock((byte)chip);
+            
+            if (chip == VgmHeaderChip::SAA1099) {
+                //SAA1099 has some special conditions
+                if (!(getVersion() >= 0x0171)) { //if file is older than 1.71
+                    return false;
+                }
+            }
+            
             return headerClk->dual;
         }
 
