@@ -60,21 +60,6 @@ class VgmParser {
             } else {
                 startOffset = HEADER_U32(0x34) + 0x34;
             }
-            /*//parsing some info
-            uint32_t sampleCount = HEADER_U32(0x18);
-            float songSeconds = (1.0F / 44100.0F) * sampleCount;
-            uint32_t opl3Clk = HEADER_U32(0x5C);
-            uint32_t opl2Clk = HEADER_U32(0x50);
-            uint32_t fileVersion = HEADER_U32(0x08); //this is a BCD number
-            
-            
-            //saa1099 is only supported on 1.71 and newer
-            uint32_t saaClk = 0;
-            if (fileVersion >= 0x0171) {
-                uint32_t saaClk = HEADER_U32(0xc8);
-            }
-
-            */
         }
 
         //VGM file's version, as a BCD coded number
