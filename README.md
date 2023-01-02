@@ -9,7 +9,7 @@ Pull requests and issues are welcomed and encouraged! If you can clean up this m
 
 As of right now, it only supports playing uncompressed VGM files that are on the root of the SD card and named `song.vgm`.
 
-***TODO: put a nice table somewhere that has what's hooked up to where and anything else that's needed. For right now you can check config.h to see what each GPIO does.***
+**Scroll down to see GPIO mappings!**
 
 Various circuits and code snippets are adapted from:
 
@@ -45,3 +45,36 @@ Various circuits and code snippets are adapted from:
 * [Tube Time - Sound Blaster 1.0 Principles of Operation](http://tubetime.us/index.php/2019/01/19/sound-blaster-1-0-principles-of-operation/)
 * [Snark Barker Github](https://github.com/schlae/snark-barker)
 * [Snark Barker Schematic](https://raw.githubusercontent.com/schlae/snark-barker/master/SnarkBarker.pdf)
+
+---
+
+## GPIO Pins
+
+*The VGM tick clock needs GPIO0 and GPIO1 connected. This is a temporary hack because I don't know what I'm doing. The RP2040 has bizarre timers.*
+
+Pin | Description
+--- | ---
+GPIO0 | VGM tick input. Connect to 44.1 KHz clock or else songs won't play!
+GPIO1 | 44.1 KHz clock generator output (connected to GPIO0)
+GPIO2 | SPI SCK
+GPIO3 | SPI MOSI
+GPIO4 | SPI MISO
+GPIO5 | SD card chip select
+GPIO6 | SAA1099 clock
+GPIO7 | SAA1099 A0
+GPIO8 | SAA1099 WR
+GPIO9 | SAA1099 #2 chip select
+GPIO10 | SAA1099 #1 chip select
+GPIO11 | OPL3 WR
+GPIO12 | OPL3 A0
+GPIO13 | OPL3 A1
+GPIO14 | OPL3 chip select
+GPIO15 | OPL3 IC (reset pin)
+GPIO16 | Data bus bit 0
+GPIO17 | Data bus bit 1
+GPIO18 | Data bus bit 2
+GPIO19 | Data bus bit 3
+GPIO20 | Data bus bit 4
+GPIO22 | Data bus bit 5
+GPIO26 | Data bus bit 6
+GPIO27 | Data bus bit 7
