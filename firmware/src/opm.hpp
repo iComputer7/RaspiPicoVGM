@@ -30,7 +30,7 @@ class OpmChip {
             //Outputs system clock divided by 36 to GPIO21
             //YM2151 should be 4,000,000 Hz sometimes
             //At 142.8 MHz sys clock it should output 3,966,667 MHz, which is 0.84% lower
-            clock_gpio_init(PIN_FM_CLK, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_CLK_SYS, 10);
+            clock_gpio_init(PIN_FM_CLK, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_CLK_SYS, 36);
         }
 
         //Initialize the OPM chip itself
