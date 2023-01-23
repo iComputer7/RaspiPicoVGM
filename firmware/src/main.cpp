@@ -71,6 +71,7 @@ int main() {
     gpio_put(PIN_SAA_A0, GPIO_OFF);
     bus.set(0);
     opl3.setAddr(0);
+    opm.setAddr(0);
 
     //init clocks
     //changing system clock for better accuracy
@@ -84,6 +85,7 @@ int main() {
     //TODO: accomodate for other system clock speeds if other boards have issues
     opl3.clockInit();
     saa1099.clockInit();
+    opm.clockInit();
 
     //tick
     uint slice_num_tick = pwm_gpio_to_slice_num(1);
@@ -95,6 +97,7 @@ int main() {
     //chip init
     opl3.chipInit();
     saa1099.chipInit();
+    opm.chipInit();
 
     //waiting for host USB serial
     while (!stdio_usb_connected()) {
