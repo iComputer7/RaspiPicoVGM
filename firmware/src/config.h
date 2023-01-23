@@ -11,6 +11,8 @@
 #define FM_WRITE_PULSE_US 1
 #define SAA_DATA_VALID_DELAY_US 1
 #define SAA_WRITE_PULSE_US 1
+#define OPM_DATA_VALID_DELAY_US 1 //datasheet says 10 ns
+#define OPM_WRITE_PULSE_US 1 //datasheet says 100 ns
 
 //GPIO Pins
 #define LED_BUILTIN 25

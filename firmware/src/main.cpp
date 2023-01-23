@@ -17,6 +17,7 @@ typedef uint8_t byte;
 #include "databus.hpp"
 #include "opl3.hpp"
 #include "saa1099.hpp"
+#include "opm.hpp"
 #include "filehandler.hpp"
 #include "vgmparser.hpp"
 
@@ -27,6 +28,7 @@ typedef uint8_t byte;
 DataBus bus;
 Opl3Chip opl3(&bus);
 Saa1099Chip saa1099(&bus);
+OpmChip opm(&bus);
 FileHandler file("song.vgm");
 VgmParser vgm(&file, &opl3, &saa1099);
 
@@ -131,12 +133,22 @@ int main() {
     if (vgm.isDual(VgmHeaderChip::SAA1099)) {
         printf("Song expects dual SAA1099, using both SAA1099 chips.\n");
     }
+
+    //checking for dual chips - YM2151
+    if (vgm.isDual(VgmHeaderChip::YM2151)) {
+        printf("FATAL: Song expects dual YM2151! This is not supported!\n");
+        printf("Hanging.\n");
+        for (;;) {
+            tight_loop_contents();
+        }
+    }
     
     //printing some info
     printf("File version: 0x%04X\n", vgm.getVersion());
     if (vgm.isPresent(VgmHeaderChip::YMF262)) printf("Expected YMF262 clock = %u Hz.\n", vgm.getChipClock(VgmHeaderChip::YMF262));
     if (vgm.isPresent(VgmHeaderChip::YM3812)) printf("Expected YM3812 clock = %u Hz.\n", vgm.getChipClock(VgmHeaderChip::YM3812));
     if (vgm.isPresent(VgmHeaderChip::SAA1099)) printf("Expected SAA1099 clock = %u Hz.\n", vgm.getChipClock(VgmHeaderChip::SAA1099));
+    if (vgm.isPresent(VgmHeaderChip::YM2151)) printf("Expected YM2151 clock = %u Hz.\n", vgm.getChipClock(VgmHeaderChip::YM2151));
     printf("Length: %f seconds (%u samples)\n", vgm.getLengthSeconds(), vgm.getLengthSamples());
     printf("Song data begins at offset 0x%x.\n", vgm.getStartOffset());
     printf("Loop offset is at 0x%x.\n", vgm.getLoopOffset());

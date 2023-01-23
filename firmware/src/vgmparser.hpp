@@ -17,7 +17,8 @@ enum class VgmHeaderChip : byte {
     YM3812 = 0x50, //OPL2
     YM3526 = 0x54, //OPL1
     YMF262 = 0x5c, //OPL3
-    SAA1099 = 0xc8
+    SAA1099 = 0xc8,
+    YM2151 = 0x30  //OPM
 };
 
 class VgmParser {
@@ -25,6 +26,7 @@ class VgmParser {
         FileHandler* file;
         Opl3Chip* opl3;
         Saa1099Chip* saa1099;
+        OpmChip* opm;
 
         uint16_t delayCycles = 0;
         uint32_t startOffset = 0;
@@ -33,6 +35,7 @@ class VgmParser {
         byte header_data[0xff];
 
         DualChipClk* getHeaderClock(byte offset) {
+            //TODO: if chip clock offset is past the bounds of the header, return 0
             return (DualChipClk*)(&header_data[offset]);
         }
 
@@ -238,10 +241,25 @@ void VgmParser::tick() {
             break;
         }
 
+        //OPM
+        case 0x54: { //YM2151
+            byte regi = file->readByte();
+            byte data = file->readByte();
+
+            //register
+            opm->write(0, regi);
+            busy_wait_us_32(OPM_WRITE_PULSE_US);
+
+            //data
+            opm->write(1, data);
+            busy_wait_us_32(OPM_WRITE_PULSE_US);
+
+            break;
+        }
+
         //Chips that won't be handled
         //Commands with 2 byte long parameters
         case 0x51: //YM2413
-        case 0x54: //YM2151
         case 0x55: //YM2203
         case 0x56: //YM2608 port 0
         case 0x57: //YM2608 port 1
