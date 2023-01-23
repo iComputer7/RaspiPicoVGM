@@ -32,11 +32,12 @@ class VgmParser {
         uint32_t startOffset = 0;
         uint32_t music_length = 0;
         uint32_t loopOffset = 0;
+        uint32_t headerSize = 0;
         byte header_data[0xff];
 
         DualChipClk* getHeaderClock(byte offset) {
-            //TODO: if chip clock offset is past the bounds of the header, return 0
-            return (DualChipClk*)(&header_data[offset]);
+            if (offset > headerSize) return 0;
+            else return (DualChipClk*)(&header_data[offset]);
         }
 
     public:
@@ -57,11 +58,13 @@ class VgmParser {
             music_length = HEADER_U32(0x4) + 4; //this is a relative offset instead of an absolute one because fuck you
             loopOffset = HEADER_U32(0x1c) + 0x1c; //ditto
             
-            //determining file start
+            //determining file start & header size
             if (getVersion() < 0x0150) {
                 startOffset = 0x40;
+                headerSize = 0x40;
             } else {
                 startOffset = HEADER_U32(0x34) + 0x34;
+                headerSize = startOffset; //TODO: double check if this is the case
             }
         }
 
