@@ -38,7 +38,7 @@ class OpmChip {
             gpio_put(PIN_FM_IC, GPIO_OFF);
             busy_wait_ms(10); //TODO: double check datasheet
             gpio_put(PIN_FM_IC, GPIO_ON);
-            busy_wait_us_32(FM_WRITE_PULSE_US);
+            busy_wait_us_32(OPM_WRITE_PULSE_US);
         }
 
         OpmChip(DataBus* _datBus) {
