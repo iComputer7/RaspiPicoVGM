@@ -1,8 +1,12 @@
 # Pico VGM Player
 
-Hardware VGM player with a Raspberry Pi Pico and a Yamaha YMF262 (OPL3), with some experimental support for dual Philips SAA1099.
+> There's so many of them and they're so rare and it would be impossible to drive and like, you'd have Bitchin' Fast 3D but VGM style.
 
-**Please be aware that this is very much a proof of concept! It lacks a lot of essential functionality at the moment!
+~ [@AidanHockey5](https://www.youtube.com/watch?v=WZmMP82XPoI)
+
+This is my attempt to support as many sound chips as I can get my hands on while learning about VGM files and the RP2040. My goal is to make an extremely modular player that gives you the freedom to cobble something together quick and dirty with whatever parts your heart desires, aside from the microcontroller of course.
+
+**Please be aware that this currently is a proof of concept! It lacks a lot of essential functionality at the moment!
 I am incredibly inexperienced with the RP2040 platform as a whole and it certainly shows here.
 I think I at least tried to somewhat explain my thought process through comments.
 Pull requests and issues are welcomed and encouraged! If you can clean up this mess or have ideas on what I should change, do not hesitate to share them!**
@@ -15,6 +19,15 @@ Various circuits and code snippets are adapted from:
 
 * (OPL3 subsystem) [Throwback Operator by @AidanHockey5](https://github.com/AidanHockey5/Throwback_Operator)
 * (SAA1099 subsystem) [Snark Barker and Sound Blaster 1.0 by @schlae and Creative Labs](https://github.com/schlae/snark-barker)
+* (YM2151 subsystem and VGP file code) [Arcade Classic 2 by @AidanHockey5](https://github.com/AidanHockey5/YM2151_Arcade_Classic_2)
+
+---
+
+## Currently Supported Chips
+
+* Yamaha YMF262 (OPL3) - single
+* Philips SAA1099 - dual, experimental!
+* Yamaha YM2151 (OPM) - single, experimental!
 
 ---
 
@@ -25,7 +38,8 @@ Various circuits and code snippets are adapted from:
 * Code better error handling that doesn't involve giving up once an error has been encountered
 * Change the clock speed of the relevant chips based on what's set in the file header
 * Refuse to play files that call for unsupported chips
-* Switch to C++ and move stuff into classes to make code more readable and clean
+* VGP file support ported from the Arcade Classic 2 to deal with digital sample chips paired with the YM2151
+* (done) ~~Switch to C++ and move stuff into classes to make code more readable and clean~~
 * (Future) VGZ support
 * (Future) RetroWave OPL3 support
 * (Future) Allow users to pick and choose which chips they have without needing to recompile the firmware
@@ -45,6 +59,8 @@ Various circuits and code snippets are adapted from:
 * [Tube Time - Sound Blaster 1.0 Principles of Operation](http://tubetime.us/index.php/2019/01/19/sound-blaster-1-0-principles-of-operation/)
 * [Snark Barker Github](https://github.com/schlae/snark-barker)
 * [Snark Barker Schematic](https://raw.githubusercontent.com/schlae/snark-barker/master/SnarkBarker.pdf)
+* [Arcade Classic 2 Github](https://github.com/AidanHockey5/YM2151_Arcade_Classic_2)
+* [Arcade Classic 2 Schematic](https://raw.githubusercontent.com/AidanHockey5/YM2151_Arcade_Classic_2/master/schematic/ArcadeClassic2.png)
 
 ---
 
