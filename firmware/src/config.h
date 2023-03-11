@@ -67,6 +67,7 @@
 #define MASK_SAA_CTRL (MASK_SAA_A0 | MASK_SAA_CS1 | MASK_SAA_CS2 | MASK_SAA_WR)
 
 //SD card stuff
+#pragma once
 #include "hw_config.h"
 #include "ff.h"
 #include "diskio.h"
