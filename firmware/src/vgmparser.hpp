@@ -1,12 +1,12 @@
 #include "filehandler.hpp"
 
-#define HEADER_U32(x) *(uint32_t*)(&header_data[x])
+#define HEADER_U32(x) *(uint32_t*)(header_data + x)
 
 //struct to unpack dual chip flag and clock from header
 typedef struct {
-    bool t6w28 : 1;      //bit 31
-    bool dual : 1;       //bit 30
     uint32_t clock : 29; //bits 0-29
+    bool dual : 1;       //bit 30
+    bool t6w28 : 1;      //bit 31
 } DualChipClk;
 
 //Enum with all the chips we care about and their offsets in the header
@@ -37,7 +37,7 @@ class VgmParser {
 
         DualChipClk* getHeaderClock(byte offset) {
             if (offset > headerSize) return 0;
-            else return (DualChipClk*)(&header_data[offset]);
+            else return (DualChipClk*)(header_data + offset);
         }
 
     public:
